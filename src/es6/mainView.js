@@ -15,7 +15,6 @@ class MainView extends React.Component {
       radioIsLoading: false,
       radioVolume: 0.8,
       mapUrl: null,
-      mapZoomLevel: 1.0,
     };
     this._radioStations = [
       {
@@ -593,20 +592,6 @@ class MainView extends React.Component {
     // Put the modified image data back to canvas
     ctx.putImageData(imageData, 0, 0);
   }
-
-  zoomMapIn() {
-    const newZoom = Math.min(this.state.mapZoomLevel * 1.25, 3.0);
-    this.setState({ mapZoomLevel: newZoom });
-  }
-
-  zoomMapOut() {
-    const newZoom = Math.max(this.state.mapZoomLevel / 1.25, 0.5);
-    this.setState({ mapZoomLevel: newZoom });
-  }
-
-  resetMapZoom() {
-    this.setState({ mapZoomLevel: 1.0 });
-  }
   parseScheduleSections(text) {
     const lines = String(text || "").split("\n");
     const days = [];
@@ -765,87 +750,37 @@ class MainView extends React.Component {
         </div>
       );
     } else if (isMap) {
-      // static OpenStreetMap image with zoom controls
+      // static OpenStreetMap image
       const item = activeitem;
       const title = item ? item.displayName : "";
-      const zoomPercentage = Math.round(this.state.mapZoomLevel * 100);
-      
       valueContent = (
         <div>
           {!this.state.mapUrl && (
             <div className="value-line">{`Fetching ${title.toLowerCase()}...`}</div>
           )}
           {this.state.mapUrl && (
-            <div>
-              <div className="value-line">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <span>Zoom: {zoomPercentage}%</span>
-                  <div>
-                    <button 
-                      onClick={() => this.zoomMapOut()}
-                      style={{ 
-                        marginRight: "5px", 
-                        background: "transparent", 
-                        border: "1px solid #19FF81", 
-                        color: "#19FF81", 
-                        padding: "2px 8px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      -
-                    </button>
-                    <button 
-                      onClick={() => this.resetMapZoom()}
-                      style={{ 
-                        marginRight: "5px", 
-                        background: "transparent", 
-                        border: "1px solid #19FF81", 
-                        color: "#19FF81", 
-                        padding: "2px 8px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Reset
-                    </button>
-                    <button 
-                      onClick={() => this.zoomMapIn()}
-                      style={{ 
-                        background: "transparent", 
-                        border: "1px solid #19FF81", 
-                        color: "#19FF81", 
-                        padding: "2px 8px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div 
-                style={{ 
-                  overflow: "auto", 
-                  maxWidth: "100%", 
-                  maxHeight: this.state.valueMaxHeight ? `${this.state.valueMaxHeight - 60}px` : "400px",
-                  border: "1px solid #19FF81"
+            <div 
+              style={{ 
+                overflow: "auto",
+                maxWidth: "100%", 
+                maxHeight: this.state.valueMaxHeight ? `${this.state.valueMaxHeight - 20}px` : "400px",
+                border: "1px solid #19FF81",
+                touchAction: "manipulation" // Enable native pinch-zoom and pan
+              }}
+            >
+              <img 
+                src={this.state.mapUrl} 
+                alt={title}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block"
                 }}
-              >
-                <img 
-                  src={this.state.mapUrl} 
-                  alt={title}
-                  style={{
-                    width: `${this.state.mapZoomLevel * 100}%`,
-                    height: "auto",
-                    display: "block",
-                    maxWidth: "none"
-                  }}
-                />
-              </div>
+              />
             </div>
           )}
         </div>
       );
-    } else {
       valueContent = (
         <div>
           {String(this.state.datavalue || "")

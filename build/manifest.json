@@ -2,38 +2,77 @@
   "name": "Pip-Boy 3000",
   "short_name": "Pip-Boy",
   "description": "Fallout-themed Pip-Boy interface with real device data",
-  "start_url": "./index.html",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "landscape-primary",
   "background_color": "#000000",
   "theme_color": "#19FF81",
+  "id": "pipboy-app",
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "categories": ["games", "entertainment", "utilities"],
   "icons": [
     {
-      "src": "./icon-192x192.png",
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSIzNiIgY3k9IjM2IiByPSIzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTlGRjgxIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCB4PSIzNiIgeT0iNDAiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzE5RkY4MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UElQPC90ZXh0Pgo8L3N2Zz4=",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTlGRjgxIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8dGV4dCB4PSI0OCIgeT0iNTMiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJUC1CT1k8L3RleHQ+Cjwvc3ZnPg==",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0IiBoZWlnaHQ9IjE0NCIgdmlld0JveD0iMCAwIDE0NCAxNDQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjE0NCIgaGVpZ2h0PSIxNDQiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSI3MiIgY3k9IjcyIiByPSI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTlGRjgxIiBzdHJva2Utd2lkdGg9IjQiLz4KICA8dGV4dCB4PSI3MiIgeT0iNzgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJUC1CT1k8L3RleHQ+Cjwvc3ZnPg==",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwMCIvPgogIDxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9IjgwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxOUZGODEiIHN0cm9rZS13aWR0aD0iNCIvPgogIDx0ZXh0IHg9Ijk2IiB5PSIxMDYiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJUC1CT1k8L3RleHQ+Cjwvc3ZnPg==",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512x512.png",
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzAwMCIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMjAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxOUZGODEiIHN0cm9rZS13aWR0aD0iMTAiLz4KICA8dGV4dCB4PSIyNTYiIHk9IjI3NiIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSIgZm9udC1zaXplPSI0OCIgZmlsbD0iIzE5RkY4MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UElQLUJPWTwvdGV4dD4KPC9zdmc+",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"],
-  "screenshots": [
+  "shortcuts": [
     {
-      "src": "./screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
+      "name": "Status",
+      "short_name": "STAT",
+      "description": "View system status",
+      "url": "/?tab=stat",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9IiMwMDAiLz4KICA8dGV4dCB4PSI0OCIgeT0iNTMiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlNUQVQ8L3RleHQ+Cjwvc3ZnPg==",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
-      "src": "./screenshot-narrow.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "name": "Radio",
+      "short_name": "RADIO",
+      "description": "Open radio player",
+      "url": "/?tab=radio",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9IiMwMDAiLz4KICA8dGV4dCB4PSI0OCIgeT0iNTMiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlJBRElPPC90ZXh0Pgo8L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
     }
-  ]
+  ],
+  "display_override": ["standalone", "minimal-ui"],
+  "edge_side_panel": {
+    "preferred_width": 480
+  }
 }

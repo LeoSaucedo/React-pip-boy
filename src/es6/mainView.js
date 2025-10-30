@@ -758,29 +758,10 @@ class MainView extends React.Component {
           {!this.state.mapUrl && (
             <div className="value-line">{`Fetching ${title.toLowerCase()}...`}</div>
           )}
-          {this.state.mapUrl && (
-            <div 
-              style={{ 
-                overflow: "auto",
-                maxWidth: "100%", 
-                maxHeight: this.state.valueMaxHeight ? `${this.state.valueMaxHeight - 20}px` : "400px",
-                border: "1px solid #19FF81",
-                touchAction: "manipulation" // Enable native pinch-zoom and pan
-              }}
-            >
-              <img 
-                src={this.state.mapUrl} 
-                alt={title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block"
-                }}
-              />
-            </div>
-          )}
+          {this.state.mapUrl && <img src={this.state.mapUrl} alt={title} style={{ maxWidth: "100%", height: "auto", touchAction: "manipulation" }} />}
         </div>
       );
+    } else {
       valueContent = (
         <div>
           {String(this.state.datavalue || "")

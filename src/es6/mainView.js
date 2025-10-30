@@ -21,6 +21,21 @@ class MainView extends React.Component {
         name: "Radio Paradise",
         url: "http://stream.radioparadise.com/aac-320",
       },
+      {
+        name: "Diamond City Radio",
+        url: "diamond-city.mp3",
+        isLocal: true,
+      },
+      {
+        name: "Galaxy News Radio",
+        url: "galaxy-news-radio.mp3",
+        isLocal: true,
+      },
+      {
+        name: "Radio New Vegas",
+        url: "radio-new-vegas.mp3",
+        isLocal: true,
+      },
     ];
     // Cache for map images to avoid re-downloading
     this._mapCache = {};
@@ -248,14 +263,44 @@ class MainView extends React.Component {
       0,
       Math.min(this._radioStations.length - 1, index)
     );
-    const st = this._radioStations[clamped];
-    if (st) {
+
+    // Always update the current station index to stay in sync
+    localStorage.setItem("pipboy_radio_station_idx", String(clamped));
+
+    // Check if we're actually switching to a different station
+    if (clamped !== this.state.radioCurrentIndex) {
+      console.log(
+        `Radio: Switching from station ${this.state.radioCurrentIndex} to ${clamped}`
+      );
+
+      const st = this._radioStations[clamped];
+      const wasPlaying = this.state.radioIsPlaying;
+
+      // Stop current playback and reset audio element
+      a.pause();
+      a.currentTime = 0;
+
+      // Remove any existing event listeners to prevent conflicts
+      const oldOnLoadedMetadata = a.onloadedmetadata;
+      a.onloadedmetadata = null;
+      a.removeEventListener("loadedmetadata", oldOnLoadedMetadata);
+
+      // Reset audio configuration for new station
+      a.loop = false; // Will be set appropriately in playRadio()
       a.src = st.url;
-      localStorage.setItem("pipboy_radio_station_idx", String(clamped));
-      this.setState({ radioCurrentIndex: clamped });
-      if (this.state.radioIsPlaying) {
-        this.playRadio();
+
+      // Update state to new station
+      this.setState({ radioCurrentIndex: clamped, radioIsPlaying: false });
+
+      // If radio was playing, start the new station
+      if (wasPlaying) {
+        // Small delay to ensure state is updated
+        setTimeout(() => this.playRadio(), 50);
       }
+    } else {
+      // Same station clicked - just update state to ensure sync
+      console.log("Radio: Same station clicked, ensuring state sync");
+      this.setState({ radioCurrentIndex: clamped });
     }
   }
   playRadio() {
@@ -272,6 +317,36 @@ class MainView extends React.Component {
     if (st && a.src !== st.url) {
       console.log("Radio: Setting source to", st.url);
       a.src = st.url;
+
+      // Reset any previous configuration
+      a.loop = false;
+      a.currentTime = 0;
+
+      // Configure based on station type
+      if (st.isLocal) {
+        a.loop = true;
+
+        // Clean up any existing metadata listeners
+        const existingListeners = a.cloneNode();
+
+        // Set up random start position when metadata loads
+        const setRandomStart = () => {
+          if (a.duration && a.duration > 0) {
+            const randomStart = Math.random() * a.duration;
+            a.currentTime = randomStart;
+            console.log(
+              `Radio: Starting ${st.name} at ${randomStart.toFixed(2)}s`
+            );
+          }
+          a.removeEventListener("loadedmetadata", setRandomStart);
+        };
+
+        a.addEventListener("loadedmetadata", setRandomStart, { once: true });
+      } else {
+        a.loop = false;
+        console.log(`Radio: Streaming ${st.name}`);
+      }
+
       a.load(); // Force reload the audio element
     }
 
@@ -296,7 +371,14 @@ class MainView extends React.Component {
               "Autoplay blocked by browser. Please try clicking play again after this alert."
             );
           } else if (error.name === "NotSupportedError") {
-            alert("Audio format not supported by your browser.");
+            console.error("Radio: Audio format not supported", st);
+            if (st.isLocal) {
+              alert(
+                `Diamond City Radio: MP3 format not supported by your browser. Please try converting the file to a different format (OGG, WAV) or use a different browser.`
+              );
+            } else {
+              alert("Audio format not supported by your browser.");
+            }
             console.log(error);
           } else if (error.name === "AbortError") {
             console.log("Radio: Play was aborted (user likely clicked pause)");
@@ -391,8 +473,10 @@ class MainView extends React.Component {
 
   createCompositeMap(lat, lon, zoom) {
     // Create cache key based on location and zoom
-    const cacheKey = `${Math.round(lat * 1000)}_${Math.round(lon * 1000)}_${zoom}`;
-    
+    const cacheKey = `${Math.round(lat * 1000)}_${Math.round(
+      lon * 1000
+    )}_${zoom}`;
+
     // Check if we already have this map cached
     if (this._mapCache[cacheKey]) {
       if (this.state.mapUrl !== this._mapCache[cacheKey]) {
@@ -436,11 +520,11 @@ class MainView extends React.Component {
         if (tilesLoaded === totalTiles) {
           // All tiles loaded, apply dark green theme filter
           this.applyDarkGreenTheme(ctx, canvas.width, canvas.height);
-          
+
           // Convert to data URL and cache it
           const compositeUrl = canvas.toDataURL("image/png");
           this._mapCache[cacheKey] = compositeUrl;
-          
+
           if (this.state.mapUrl !== compositeUrl) {
             this.setState({ mapUrl: compositeUrl });
           }
@@ -453,7 +537,7 @@ class MainView extends React.Component {
           this.applyDarkGreenTheme(ctx, canvas.width, canvas.height);
           const compositeUrl = canvas.toDataURL("image/png");
           this._mapCache[cacheKey] = compositeUrl;
-          
+
           if (this.state.mapUrl !== compositeUrl) {
             this.setState({ mapUrl: compositeUrl });
           }
@@ -474,34 +558,34 @@ class MainView extends React.Component {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      
+
       // Calculate grayscale value for intensity mapping
       const gray = 0.299 * r + 0.587 * g + 0.114 * b;
       const intensity = gray / 255;
-      
+
       if (intensity < 0.15) {
         // Very dark areas -> almost black with minimal green tint
-        data[i] = Math.floor(intensity * 15);     // R: 0-2
+        data[i] = Math.floor(intensity * 15); // R: 0-2
         data[i + 1] = Math.floor(intensity * 25); // G: 0-4
         data[i + 2] = Math.floor(intensity * 15); // B: 0-2
       } else if (intensity < 0.35) {
         // Medium dark areas -> darker green but more visible
         const greenIntensity = (intensity - 0.15) / 0.2;
-        data[i] = Math.floor(8 + greenIntensity * 22);     // R: 8-30
+        data[i] = Math.floor(8 + greenIntensity * 22); // R: 8-30
         data[i + 1] = Math.floor(15 + greenIntensity * 45); // G: 15-60
-        data[i + 2] = Math.floor(8 + greenIntensity * 22);  // B: 8-30
+        data[i + 2] = Math.floor(8 + greenIntensity * 22); // B: 8-30
       } else if (intensity < 0.65) {
         // Medium areas -> readable pip-boy green
         const greenIntensity = (intensity - 0.35) / 0.3;
-        data[i] = Math.floor(20 + greenIntensity * 60);     // R: 20-80
-        data[i + 1] = Math.floor(40 + greenIntensity * 90);  // G: 40-130
-        data[i + 2] = Math.floor(15 + greenIntensity * 45);  // B: 15-60
+        data[i] = Math.floor(20 + greenIntensity * 60); // R: 20-80
+        data[i + 1] = Math.floor(40 + greenIntensity * 90); // G: 40-130
+        data[i + 2] = Math.floor(15 + greenIntensity * 45); // B: 15-60
       } else {
         // Light areas -> brighter pip-boy green for good readability
         const greenIntensity = (intensity - 0.65) / 0.35;
-        data[i] = Math.floor(50 + greenIntensity * 105);    // R: 50-155
+        data[i] = Math.floor(50 + greenIntensity * 105); // R: 50-155
         data[i + 1] = Math.floor(80 + greenIntensity * 115); // G: 80-195
-        data[i + 2] = Math.floor(25 + greenIntensity * 85);  // B: 25-110
+        data[i + 2] = Math.floor(25 + greenIntensity * 85); // B: 25-110
       }
     }
 
@@ -632,18 +716,6 @@ class MainView extends React.Component {
               style={{ width: "100%" }}
             />
           </div>
-          <div className="value-line">Stations:</div>
-          {this._radioStations.map((s, idx) => (
-            <div
-              key={s.url}
-              className="value-line"
-              style={{ cursor: "pointer" }}
-              onClick={() => this.selectStation(idx)}
-            >
-              {idx === this.state.radioCurrentIndex ? "• " : "○ "}
-              {s.name}
-            </div>
-          ))}
         </div>
       );
     } else if (isQuests) {
@@ -706,17 +778,38 @@ class MainView extends React.Component {
       <div className="main-content">
         <div className="list-view">
           <ul>
-            {this.props.activeCategory.items.map((item, index) => {
-              let setActive = this.props.setActive.bind(this, index);
-              return (
-                <li
-                  onClick={setActive}
-                  className={item.active ? "active menu-option" : "menu-option"}
-                >
-                  {item.displayName}
-                </li>
-              );
-            })}
+            {isRadio
+              ? // Show radio stations in sidebar when RADIO category is active
+                this._radioStations.map((station, index) => {
+                  return (
+                    <li
+                      key={station.url}
+                      onClick={() => this.selectStation(index)}
+                      className={
+                        index === this.state.radioCurrentIndex
+                          ? "active menu-option"
+                          : "menu-option"
+                      }
+                    >
+                      {station.name}
+                    </li>
+                  );
+                })
+              : // Show regular category items for other categories
+                this.props.activeCategory.items.map((item, index) => {
+                  let setActive = this.props.setActive.bind(this, index);
+                  return (
+                    <li
+                      key={index}
+                      onClick={setActive}
+                      className={
+                        item.active ? "active menu-option" : "menu-option"
+                      }
+                    >
+                      {item.displayName}
+                    </li>
+                  );
+                })}
           </ul>
         </div>
         <div

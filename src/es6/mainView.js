@@ -4,28 +4,379 @@ class MainView extends React.Component {
   constructor() {
     super();
     this.state = {
-      datavalue: ''
+      datavalue: '',
+      descriptionStyle: null,
+      mainViewPadBottom: 0,
+      valueMaxHeight: null,
+      scheduleOpen: {},
+      questsChecked: {},
+      radioCurrentIndex: 0,
+      radioIsPlaying: false,
+      radioVolume: 0.8,
+      mapUrl: null
     };
+    this._radioStations = [
+      { name: 'SomaFM – Groove Salad', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+      { name: 'SomaFM – DEF CON Radio', url: 'https://ice1.somafm.com/defcon-128-mp3' },
+      { name: 'SomaFM – Space Station', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
+    ];
   }
   componentDidMount(){
     this.updateDatavalue();
+    // ensure auto-refresh is started if STATUS is initially active
+    const activeitem = this.getActiveItem(this.props.activeCategory);
+    this.manageAutoRefresh(activeitem);
+    // position description after paint
+    if (typeof window !== 'undefined') {
+      this._onResize = this.updateDescriptionOffset.bind(this);
+      this._onScroll = this.updateDescriptionOffset.bind(this);
+      this._onOrient = this.updateDescriptionOffset.bind(this);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('scroll', this._onScroll, { passive: true });
+      window.addEventListener('orientationchange', this._onOrient);
+      // schedule a couple frames to ensure correct layout
+      window.requestAnimationFrame(() => this.updateDescriptionOffset());
+      setTimeout(() => this.updateDescriptionOffset(), 0);
+    }
+    this.loadQuestsState();
+    this.loadRadioState();
   }
   componentDidUpdate(prevProps, prevState){
-    if(prevState.datavalue === this.state.datavalue){
+    const activeitem = this.getActiveItem(this.props.activeCategory);
+    const sig = `${this.props.activeCategory.name}::${activeitem.displayName}`;
+    if (this._lastSignature !== sig) {
       this.updateDatavalue();
+      // manage auto-refresh when switching active items
+      this.manageAutoRefresh(activeitem);
+      if (this.props.activeCategory.name === 'DATA' && activeitem.displayName === 'QUESTS') {
+        this.loadQuestsState();
+      }
+    }
+    const prevItem = this.getActiveItem(prevProps.activeCategory);
+    const wasRadio = prevProps.activeCategory.name === 'RADIO' && prevItem.displayName === 'RADIO';
+    const isRadio = this.props.activeCategory.name === 'RADIO' && activeitem.displayName === 'RADIO';
+    if (wasRadio && !isRadio) {
+      this.pauseRadio();
+    }
+    // if we are in MAP, update static map url whenever layout changes
+    if (this.props.activeCategory.name === 'MAP') {
+      this.updateMapUrl();
+    } else if (prevProps.activeCategory.name === 'MAP') {
+      // leaving map, clear url (optional)
+      if (this.state.mapUrl) this.setState({ mapUrl: null });
+    }
+    // keep description pinned above the footer on any update
+    this.updateDescriptionOffset();
+  }
+  componentWillUnmount(){
+    this.stopAutoRefresh();
+    if (typeof window !== 'undefined' && this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+    }
+    if (typeof window !== 'undefined' && this._onScroll) {
+      window.removeEventListener('scroll', this._onScroll);
+    }
+    if (typeof window !== 'undefined' && this._onOrient) {
+      window.removeEventListener('orientationchange', this._onOrient);
     }
   }
 
   updateDatavalue(){
-    let activeitem = this.props.activeCategory.items.filter((item) => { return item.active; })[0];
+    let activeitem = this.getActiveItem(this.props.activeCategory);
     let self = this;
     activeitem.generateData().then((datavalue) => {
+      const sig = `${self.props.activeCategory.name}::${activeitem.displayName}`;
+      self._lastSignature = sig;
       self.setState({datavalue: datavalue});
+    });
+  }
+  getActiveItem(category){
+    return category.items.filter((item) => { return item.active; })[0];
+  }
+  updateDescriptionOffset(){
+    if (typeof window === 'undefined') return;
+    const footer = document.querySelector('.footer');
+    const footerInner = document.querySelector('.footer .container-bottom');
+    const mainView = document.querySelector('.main-view');
+    const descEl = document.querySelector('.main-view .description');
+    const valueEl = document.querySelector('.main-view .value');
+    if (footer && mainView) {
+      const footerRect = footer.getBoundingClientRect();
+      const footerInnerRect = footerInner ? footerInner.getBoundingClientRect() : footerRect;
+      const mainRect = mainView.getBoundingClientRect();
+      const docEl = document.documentElement || document.body;
+      const viewportH = docEl.clientHeight || window.innerHeight;
+      const viewportW = docEl.clientWidth || window.innerWidth;
+      const GAP = 0; // no gap; sit directly above footer
+      const bottom = Math.max(0, Math.round(viewportH - footerRect.top) + GAP);
+      const left = Math.round(mainRect.left);
+      const footerRight = footerRect.right; // match footer's outer right edge
+      const rightSpace = Math.max(0, Math.round(viewportW - footerRight));
+      const descHeight = descEl ? Math.ceil(descEl.getBoundingClientRect().height) : 0;
+      const descTop = descEl ? Math.round(descEl.getBoundingClientRect().top) : null;
+      const valueTop = valueEl ? Math.round(valueEl.getBoundingClientRect().top) : null;
+      const desiredValueMax = (descTop !== null && valueTop !== null) ? Math.max(0, descTop - valueTop - 8) : null;
+      // pad the main view so scrolling content doesn't go under the fixed description
+      const padBottom = descHeight;
+      const curr = this.state.descriptionStyle || {};
+      const changed = (
+        curr.bottom !== bottom ||
+        curr.left !== left ||
+        curr.right !== rightSpace ||
+        this.state.mainViewPadBottom !== padBottom ||
+        (desiredValueMax !== null && this.state.valueMaxHeight !== desiredValueMax)
+      );
+      if (changed) {
+        this.setState({ descriptionStyle: { position: 'fixed', bottom, left, right: rightSpace, zIndex: 2 }, mainViewPadBottom: padBottom, valueMaxHeight: desiredValueMax });
+      }
+    }
+  }
+  manageAutoRefresh(activeitem){
+    const isStatus = this.props.activeCategory.name === 'STAT' && activeitem.displayName === 'STATUS';
+    if (isStatus) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+  }
+  startAutoRefresh(){
+    if (this._refreshTimer) return;
+    // refresh every second for live clock seconds
+    this._refreshTimer = setInterval(() => {
+      this.updateDatavalue();
+    }, 1000);
+  }
+  stopAutoRefresh(){
+    if (this._refreshTimer) {
+      clearInterval(this._refreshTimer);
+      this._refreshTimer = null;
+    }
+  }
+  ensureAudio(){
+    if (!this._audio && typeof Audio !== 'undefined') {
+      this._audio = new Audio();
+      this._audio.preload = 'none';
+      this._audio.volume = this.state.radioVolume;
+    }
+    return this._audio;
+  }
+  loadRadioState(){
+    try {
+      const idx = localStorage.getItem('pipboy_radio_station_idx');
+      const vol = localStorage.getItem('pipboy_radio_volume');
+      const next = {};
+      if (idx !== null) next.radioCurrentIndex = Math.max(0, Math.min(this._radioStations.length - 1, parseInt(idx, 10) || 0));
+      if (vol !== null) next.radioVolume = Math.max(0, Math.min(1, parseFloat(vol)));
+      if (Object.keys(next).length) this.setState(next);
+      const a = this.ensureAudio();
+      if (a) a.volume = (next.radioVolume !== undefined ? next.radioVolume : this.state.radioVolume);
+    } catch(e) {}
+  }
+  selectStation(index){
+    const a = this.ensureAudio();
+    if (!a) return;
+    const clamped = Math.max(0, Math.min(this._radioStations.length - 1, index));
+    const st = this._radioStations[clamped];
+    if (st) {
+      a.src = st.url;
+      localStorage.setItem('pipboy_radio_station_idx', String(clamped));
+      this.setState({ radioCurrentIndex: clamped });
+      if (this.state.radioIsPlaying) {
+        this.playRadio();
+      }
+    }
+  }
+  playRadio(){
+    const a = this.ensureAudio();
+    if (!a) return;
+    const st = this._radioStations[this.state.radioCurrentIndex];
+    if (st && a.src !== st.url) a.src = st.url;
+    a.play().then(() => {
+      if (!this.state.radioIsPlaying) this.setState({ radioIsPlaying: true });
+    }).catch(() => {});
+  }
+  pauseRadio(){
+    if (this._audio) {
+      this._audio.pause();
+    }
+    if (this.state.radioIsPlaying) this.setState({ radioIsPlaying: false });
+  }
+  setRadioVolume(v){
+    const vol = Math.max(0, Math.min(1, parseFloat(v)));
+    if (!isNaN(vol)) {
+      if (this._audio) this._audio.volume = vol;
+      localStorage.setItem('pipboy_radio_volume', String(vol));
+      if (this.state.radioVolume !== vol) this.setState({ radioVolume: vol });
+    }
+  }
+  getMapZoom(){
+    const item = this.getActiveItem(this.props.activeCategory);
+    if (!item) return 14;
+    if (item.displayName === 'LOCAL MAP') return 15;
+    if (item.displayName === 'WORLD MAP') return 3;
+    return 14;
+  }
+  ensureGeo(cb){
+    if (this._geo) { cb(this._geo); return; }
+    if (!navigator.geolocation) { cb(null); return; }
+    navigator.geolocation.getCurrentPosition((pos)=>{
+      this._geo = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      cb(this._geo);
+    }, ()=> cb(null));
+  }
+  updateMapUrl(){
+    const isMap = this.props.activeCategory && this.props.activeCategory.name === 'MAP';
+    if (!isMap) return;
+    const mainView = document.querySelector('.main-view');
+    const mainRect = mainView ? mainView.getBoundingClientRect() : null;
+    const widthPx = mainRect ? Math.max(200, Math.min(1024, Math.round(mainRect.width))) : 600;
+    const heightPx = Math.max(150, Math.min(768, Math.round(this.state.valueMaxHeight || 400)));
+    const zoom = this.getMapZoom();
+    this.ensureGeo((geo)=>{
+      if (!geo) {
+        const url = null;
+        if (this.state.mapUrl !== url) this.setState({ mapUrl: url });
+        return;
+      }
+      const marker = `${geo.lat},${geo.lon},lightblue1`;
+      const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${geo.lat},${geo.lon}&zoom=${zoom}&size=${widthPx}x${heightPx}&markers=${marker}`;
+      if (this.state.mapUrl !== url) this.setState({ mapUrl: url });
+    });
+  }
+  parseScheduleSections(text){
+    const lines = String(text || '').split('\n');
+    const days = [];
+    let current = null;
+    lines.forEach((line) => {
+      const headerMatch = line.match(/^([A-Z]+)\s*-\s*(.+)$/);
+      if (headerMatch) {
+        current = { title: `${headerMatch[1]} - ${headerMatch[2]}`, items: [] };
+        days.push(current);
+      } else if (current && line.trim().startsWith('- ')) {
+        current.items.push(line.replace(/^\-\s*/, ''));
+      }
+    });
+    return days;
+  }
+  toggleSchedule(title){
+    this.setState((prev) => ({ scheduleOpen: { ...prev.scheduleOpen, [title]: !prev.scheduleOpen[title] } }));
+  }
+  loadQuestsState(){
+    try {
+      const raw = localStorage.getItem('pipboy_quests_checked');
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed && typeof parsed === 'object') {
+        this.setState({ questsChecked: parsed });
+      }
+    } catch(e) {}
+  }
+  saveQuestsState(next){
+    try {
+      localStorage.setItem('pipboy_quests_checked', JSON.stringify(next));
+    } catch(e) {}
+  }
+  toggleQuest(label){
+    this.setState((prev) => {
+      const next = { ...prev.questsChecked, [label]: !prev.questsChecked[label] };
+      this.saveQuestsState(next);
+      return { questsChecked: next };
     });
   }
   render() {
 
-    let activeitem = this.props.activeCategory.items.filter((item) => { return item.active; })[0];
+    let activeitem = this.getActiveItem(this.props.activeCategory);
+    const descriptionStyle = this.state.descriptionStyle || undefined;
+    const isData = this.props.activeCategory.name === 'DATA';
+    const isSchedule = isData && activeitem.displayName === 'SCHEDULE';
+    const isQuests = isData && activeitem.displayName === 'QUESTS';
+    const isRadio = this.props.activeCategory.name === 'RADIO' && activeitem.displayName === 'RADIO';
+    const isMap = this.props.activeCategory.name === 'MAP';
+    let valueContent = null;
+    if (isSchedule) {
+      const sections = this.parseScheduleSections(this.state.datavalue);
+      valueContent = (
+        <div>
+          {sections.map((sec) => {
+            const open = !!this.state.scheduleOpen[sec.title];
+            return (
+              <div key={sec.title}>
+                <div className="value-line" onClick={() => this.toggleSchedule(sec.title)} style={{ cursor: 'pointer' }}>
+                  {open ? '▾ ' : '▸ '}{sec.title}
+                </div>
+                {open && sec.items.map((it, idx) => (
+                  <div key={sec.title + ':' + idx} className="value-line">- {it}</div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      );
+    } else if (isRadio) {
+      const nowStation = this._radioStations[this.state.radioCurrentIndex];
+      valueContent = (
+        <div>
+          <div className="value-line">Now Playing: {this.state.radioIsPlaying && nowStation ? nowStation.name : '-'}</div>
+          <div className="value-line" style={{ cursor: 'pointer' }} onClick={() => (this.state.radioIsPlaying ? this.pauseRadio() : this.playRadio())}>
+            {this.state.radioIsPlaying ? 'Pause' : 'Play'}
+          </div>
+          <div className="value-line">
+            Volume: {Math.round(this.state.radioVolume * 100)}%
+          </div>
+          <div className="value-line">
+            <input type="range" min="0" max="1" step="0.01" value={this.state.radioVolume} onChange={(e) => this.setRadioVolume(e.target.value)} />
+          </div>
+          <div className="value-line">Stations:</div>
+          {this._radioStations.map((s, idx) => (
+            <div key={s.url} className="value-line" style={{ cursor: 'pointer' }} onClick={() => this.selectStation(idx)}>
+              {(idx === this.state.radioCurrentIndex ? '• ' : '○ ')}{s.name}
+            </div>
+          ))}
+        </div>
+      );
+    } else if (isQuests) {
+      const lines = String(this.state.datavalue || '').split('\n');
+      valueContent = (
+        <div>
+          {lines.map((line, i) => {
+            const m = line.match(/^\[\s*\]\s*(.+)$/);
+            if (m) {
+              const label = m[1];
+              const checked = !!this.state.questsChecked[label];
+              return (
+                <div key={i} className="value-line">
+                  <label>
+                    <input type="checkbox" checked={checked} onChange={() => this.toggleQuest(label)} style={{ marginRight: '0.5em' }} />{label}
+                  </label>
+                </div>
+              );
+            }
+            return <div key={i} className="value-line">{line}</div>;
+          })}
+        </div>
+      );
+    } else if (isMap) {
+      // static OpenStreetMap image
+      const item = activeitem;
+      const title = item ? item.displayName : '';
+      valueContent = (
+        <div>
+          {!this.state.mapUrl && <div className="value-line">{`Fetching ${title.toLowerCase()}...`}</div>}
+          {this.state.mapUrl && (
+            <img src={this.state.mapUrl} alt={title} />
+          )}
+        </div>
+      );
+    } else {
+      valueContent = (
+        <div>
+          {String(this.state.datavalue || '')
+            .split('\n')
+            .map((line, i) => (
+              <div key={i} className="value-line">{line}</div>
+            ))}
+        </div>
+      );
+    }
     return(
       <div className="main-content">
         <div className="list-view">
@@ -36,14 +387,14 @@ class MainView extends React.Component {
             })}
           </ul>
         </div>
-        <div className="main-view">
+        <div className="main-view" style={ this.state.mainViewPadBottom ? { paddingBottom: this.state.mainViewPadBottom } : undefined }>
           <div className="container-main">
             <div className="center">
               <div className="title">{activeitem.displayName}</div>
-              <div className="value">{this.state.datavalue}</div>
+              <div className="value" style={{ overflowY: 'auto', maxHeight: this.state.valueMaxHeight || 'unset' }}>{valueContent}</div>
             </div>
           </div>
-          <div className="description">{activeitem.dataDescription}</div>
+          <div className="description" style={descriptionStyle}>{activeitem.dataDescription}</div>
         </div>
       </div>
     );

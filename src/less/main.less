@@ -131,6 +131,8 @@ body {
   flex-flow: row nowrap;
   justify-content: space-around;
   width: 100%;
+  /* header spacing only; footer/description are independently positioned */
+  padding-top: 1vh;
 
   .list-view {
     flex: 11;
@@ -150,29 +152,59 @@ body {
   .main-view {
     flex: 12;
     margin: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* Positioning context for absolute description */
+    overflow: visible;
+    position: relative;
+    padding-bottom: 0;
     .container-main{
       position: relative;
+      /* allow content to size naturally inside main-view */
+      max-height: none;
+      overflow: visible;
       .center{
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-right: -15%;
-        transform: translate(-50%, 33%);
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
       }
     }
     .title {
-      font-size: 1.6em;
+      font-size: clamp(1em, 2.2vw, 1.4em);
+      line-height: 1.2;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .value {
-      font-size: 2.5em;
+      font-size: clamp(1.1em, 3vw, 2em);
+      line-height: 1.2;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+      .value-line{
+        padding-left: 1.4em;
+        text-indent: -1.4em; // hanging indent so wrapped lines align under the first character after the marker
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
     }
     .description{
       border-top: 2px solid;
       .fade-border(bottom, right);
       background-position: 100% 0%;
-      position: absolute;
-      bottom: 17%;
-      width: 48%;
+      padding-top: 0.5rem;
     }
   }
 }

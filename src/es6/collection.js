@@ -1,120 +1,205 @@
-import Battery from './device/battery.js';
-import Language from './device/language.js';
+import Battery from "./device/battery.js";
+import Language from "./device/language.js";
 
-import Coordinates from './position/coordinates.js';
-import Timezone from './position/timezone.js';
+import Coordinates from "./position/coordinates.js";
+import Timezone from "./position/timezone.js";
 
 export default {
-  "categories": [
+  categories: [
     {
-      "name": "STAT",
-      "active": true,
-      "items" : [
+      name: "STAT",
+      active: true,
+      items: [
         {
           displayName: "STATUS",
           dataDescription: "General status overview.",
           active: true,
-          generateData(){
+          generateData() {
             const b = new Battery();
             const getDate = () => {
               const now = new Date();
-              return now.toLocaleDateString([], {year: 'numeric', month: 'short', day: '2-digit'});
+              return now.toLocaleDateString([], {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+              });
             };
             const getTime = () => {
               const now = new Date();
-              return now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true});
+              return now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+              });
             };
             const getBattery = () => b.generateData();
             const wmoText = (code) => {
               const map = {
-                0: 'Clear sky',
-                1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-                45: 'Fog', 48: 'Depositing rime fog',
-                51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
-                56: 'Freezing drizzle: light', 57: 'Freezing drizzle: dense',
-                61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
-                66: 'Freezing rain: light', 67: 'Freezing rain: heavy',
-                71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
-                77: 'Snow grains',
-                80: 'Rain showers: slight', 81: 'Rain showers: moderate', 82: 'Rain showers: violent',
-                85: 'Snow showers: slight', 86: 'Snow showers: heavy',
-                95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+                0: "Clear sky",
+                1: "Mainly clear",
+                2: "Partly cloudy",
+                3: "Overcast",
+                45: "Fog",
+                48: "Depositing rime fog",
+                51: "Light drizzle",
+                53: "Moderate drizzle",
+                55: "Dense drizzle",
+                56: "Freezing drizzle: light",
+                57: "Freezing drizzle: dense",
+                61: "Slight rain",
+                63: "Moderate rain",
+                65: "Heavy rain",
+                66: "Freezing rain: light",
+                67: "Freezing rain: heavy",
+                71: "Slight snow",
+                73: "Moderate snow",
+                75: "Heavy snow",
+                77: "Snow grains",
+                80: "Rain showers: slight",
+                81: "Rain showers: moderate",
+                82: "Rain showers: violent",
+                85: "Snow showers: slight",
+                86: "Snow showers: heavy",
+                95: "Thunderstorm",
+                96: "Thunderstorm with slight hail",
+                99: "Thunderstorm with heavy hail",
               };
               return map[code] || `WMO ${code}`;
             };
-            const getWeather = () => new Promise((resolve) => {
-              if (!navigator.geolocation) {
-                resolve("Weather: N/A");
-                return;
-              }
-              navigator.geolocation.getCurrentPosition((pos) => {
-                const { latitude, longitude } = pos.coords;
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`;
-                fetch(url)
-                  .then(r => r.json())
-                  .then(json => {
-                    const curr = (json && json.current) || {};
-                    const temp = curr.temperature_2m;
-                    const code = curr.weather_code;
-                    const text = (typeof code !== 'undefined') ? wmoText(code) : 'N/A';
-                    resolve(`Temp: ${typeof temp !== 'undefined' ? temp + '°F' : 'N/A'}\nWeather: ${text}`);
-                  })
-                  .catch(() => resolve("Temp: N/A"));
-              }, () => resolve("Temp: N/A"));
-            });
+            const getWeather = () =>
+              new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                  resolve("Weather: N/A");
+                  return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`;
+                    fetch(url)
+                      .then((r) => r.json())
+                      .then((json) => {
+                        const curr = (json && json.current) || {};
+                        const temp = curr.temperature_2m;
+                        const code = curr.weather_code;
+                        const text =
+                          typeof code !== "undefined" ? wmoText(code) : "N/A";
+                        resolve(
+                          `Temp: ${
+                            typeof temp !== "undefined" ? temp + "°F" : "N/A"
+                          }\nWeather: ${text}`
+                        );
+                      })
+                      .catch(() => resolve("Temp: N/A"));
+                  },
+                  () => resolve("Temp: N/A")
+                );
+              });
 
             return new Promise((resolve) => {
               Promise.all([getBattery(), getWeather()])
                 .then(([battery, weather]) => {
                   const date = getDate();
-                  const time = getTime();
-                  resolve(`${date}\nTime: ${time}\nBattery: ${battery}\n${weather}`);
+                  resolve(`${date}\nBattery: ${battery}\n${weather}`);
                 })
                 .catch(() => {
                   const date = getDate();
-                  const time = getTime();
-                  resolve(`${date}\nTime: ${time}\nBattery: N/A\nWeather: N/A`);
+                  resolve(`${date}\nBattery: N/A\nWeather: N/A`);
                 });
             });
-          }
+          },
         },
         {
           displayName: "S.P.E.C.I.A.L.",
           dataDescription: "Primary attributes.",
           active: false,
-          generateData(){
-            return new Promise((resolve)=> resolve("Not implemented"));
-          }
+          generateData() {
+            return new Promise((resolve) => resolve("Not implemented"));
+          },
         },
         {
           displayName: "PERKS",
           dataDescription: "Acquired perks.",
           active: false,
-          generateData(){
-            return new Promise((resolve)=> resolve("Not implemented"));
-          }
-        }
-      ]
+          generateData() {
+            return new Promise((resolve) => resolve("Not implemented"));
+          },
+        },
+      ],
     },
     {
-      "name": "INV",
-      "active": false,
-      "items" : [
-        { displayName: "WEAP", dataDescription: "Weapons.", active: true, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "APP", dataDescription: "Apparel.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "AID", dataDescription: "Aid items.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "MISC", dataDescription: "Misc items.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "JUNK", dataDescription: "Junk.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "MOD", dataDescription: "Mods.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } },
-        { displayName: "AMMO", dataDescription: "Ammunition.", active: false, generateData(){ return new Promise((r)=> r("Empty")); } }
-      ]
+      name: "INV",
+      active: false,
+      items: [
+        {
+          displayName: "WEAP",
+          dataDescription: "Weapons.",
+          active: true,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "APP",
+          dataDescription: "Apparel.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "AID",
+          dataDescription: "Aid items.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "MISC",
+          dataDescription: "Misc items.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "JUNK",
+          dataDescription: "Junk.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "MOD",
+          dataDescription: "Mods.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+        {
+          displayName: "AMMO",
+          dataDescription: "Ammunition.",
+          active: false,
+          generateData() {
+            return new Promise((r) => r("Empty"));
+          },
+        },
+      ],
     },
     {
-      "name": "DATA",
-      "active": false,
-      "items" : [
-        { displayName: "SCHEDULE", dataDescription: "Event schedule overview.", active: true, generateData(){
-            return new Promise((resolve)=>{
+      name: "DATA",
+      active: false,
+      items: [
+        {
+          displayName: "SCHEDULE",
+          dataDescription: "Event schedule overview.",
+          active: true,
+          generateData() {
+            return new Promise((resolve) => {
               const text = [
                 "Please Note: Schedule is subject to change up until and including during the event itself.",
                 "",
@@ -158,13 +243,18 @@ export default {
                 "- 12pm: Poker on the Deck",
                 "- 12pm - 4pm: Sonic Shakers Live",
                 "- 4pm - 6pm: Fallout Family Feud",
-                "- 6pm - 7:30pm: Independent Fallout Wiki Trivia"
+                "- 6pm - 7:30pm: Independent Fallout Wiki Trivia",
               ].join("\n");
               resolve(text);
             });
-          } },
-        { displayName: "QUESTS", dataDescription: "Active quests.", active: false, generateData(){
-            return new Promise((resolve)=> {
+          },
+        },
+        {
+          displayName: "QUESTS",
+          dataDescription: "Active quests.",
+          active: false,
+          generateData() {
+            return new Promise((resolve) => {
               const text = [
                 "Fallout Fan Celebration 2025 - Goodsprings, NV (Nov 14-16)",
                 "",
@@ -175,13 +265,18 @@ export default {
                 "[ ] Explore: Extra Tours, Culinary Gauntlet",
                 "[ ] Enter: Cosplay Contest",
                 "[ ] Attend: Film Festival",
-                "[ ] Review: Code of Conduct"
+                "[ ] Review: Code of Conduct",
               ].join("\n");
               resolve(text);
             });
-          } },
-        { displayName: "SHUTTLES", dataDescription: "Event shuttle routes and hubs.", active: false, generateData(){
-            return new Promise((resolve)=> {
+          },
+        },
+        {
+          displayName: "SHUTTLES",
+          dataDescription: "Event shuttle routes and hubs.",
+          active: false,
+          generateData() {
+            return new Promise((resolve) => {
               const text = [
                 "Shuttle: Wasteland Express (included with event ticket)",
                 "Primm - Buffalo Bills (Lodging & Shuttle Hub)",
@@ -190,17 +285,18 @@ export default {
                 "",
                 "Routes:",
                 "- Buffalo Bills ⇄ Pioneer Saloon (Fri-Sat)",
-                "- Pioneer Saloon ⇄ Sandy Valley Ranch (Sun)"
+                "- Pioneer Saloon ⇄ Sandy Valley Ranch (Sun)",
               ].join("\n");
               resolve(text);
             });
-          } },
+          },
+        },
         {
           displayName: "STATS",
           dataDescription: "Various statistics.",
           active: false,
-          generateData(){
-            return new Promise((resolve)=> {
+          generateData() {
+            return new Promise((resolve) => {
               const text = [
                 "Dates: Nov 14-16, 2025 (Fri-Sun)",
                 "Location: Goodsprings, NV",
@@ -209,44 +305,51 @@ export default {
                 "Organizers: Pioneer Saloon & Buttered Popcorn Entertainment",
                 "",
                 "Activities: Extra Tours, Mojave Mayhem, Culinary Gauntlet, Cosplay Contest, Film Festival",
-                "Info: About • Guests • Schedule • FAQ • Newsreels • Code of Conduct"
+                "Info: About • Guests • Schedule • FAQ • Newsreels • Code of Conduct",
               ].join("\n");
               resolve(text);
             });
-          }
-        }
-      ]
+          },
+        },
+      ],
     },
     {
-      "name": "MAP",
-      "active": false,
-      "items" : [
+      name: "MAP",
+      active: false,
+      items: [
         {
           displayName: "LOCAL MAP",
           dataDescription: "Local vicinity.",
           active: true,
-          generateData(){
+          generateData() {
             const t = new Timezone();
             return t.generateData();
-          }
+          },
         },
         {
           displayName: "WORLD MAP",
           dataDescription: "World overview.",
           active: false,
-          generateData(){
+          generateData() {
             const c = new Coordinates();
             return c.generateData();
-          }
-        }
-      ]
+          },
+        },
+      ],
     },
     {
-      "name": "RADIO",
-      "active": false,
-      "items" : [
-        { displayName: "RADIO", dataDescription: "Tune to stations.", active: true, generateData(){ return new Promise((r)=> r("No stations")); } }
-      ]
-    }
-  ]
-}
+      name: "RADIO",
+      active: false,
+      items: [
+        {
+          displayName: "RADIO",
+          dataDescription: "Tune to stations.",
+          active: true,
+          generateData() {
+            return new Promise((r) => r("No stations"));
+          },
+        },
+      ],
+    },
+  ],
+};

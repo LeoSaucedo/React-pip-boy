@@ -22,6 +22,8 @@ class MainView extends React.Component {
         url: "http://stream.radioparadise.com/aac-320",
       },
     ];
+    // Cache for map images to avoid re-downloading
+    this._mapCache = {};
   }
   componentDidMount() {
     this.updateDatavalue();
@@ -328,8 +330,22 @@ class MainView extends React.Component {
     const item = this.getActiveItem(this.props.activeCategory);
     if (!item) return 14;
     if (item.displayName === "LOCAL MAP") return 15;
-    if (item.displayName === "WORLD MAP") return 3;
+    if (item.displayName === "WORLD MAP") return 12;
     return 14;
+  }
+  lonToTileX(lon, zoom) {
+    return Math.floor(((lon + 180) / 360) * Math.pow(2, zoom));
+  }
+  latToTileY(lat, zoom) {
+    return Math.floor(
+      ((1 -
+        Math.log(
+          Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)
+        ) /
+          Math.PI) /
+        2) *
+        Math.pow(2, zoom)
+    );
   }
   ensureGeo(cb) {
     if (this._geo) {
@@ -368,10 +384,129 @@ class MainView extends React.Component {
         if (this.state.mapUrl !== url) this.setState({ mapUrl: url });
         return;
       }
-      const marker = `${geo.lat},${geo.lon},lightblue1`;
-      const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${geo.lat},${geo.lon}&zoom=${zoom}&size=${widthPx}x${heightPx}&markers=${marker}`;
-      if (this.state.mapUrl !== url) this.setState({ mapUrl: url });
+      // Create composite map from multiple OSM tiles
+      this.createCompositeMap(geo.lat, geo.lon, zoom);
     });
+  }
+
+  createCompositeMap(lat, lon, zoom) {
+    // Create cache key based on location and zoom
+    const cacheKey = `${Math.round(lat * 1000)}_${Math.round(lon * 1000)}_${zoom}`;
+    
+    // Check if we already have this map cached
+    if (this._mapCache[cacheKey]) {
+      if (this.state.mapUrl !== this._mapCache[cacheKey]) {
+        this.setState({ mapUrl: this._mapCache[cacheKey] });
+      }
+      return;
+    }
+
+    // Create a 2x2 grid of tiles (512x512 final image)
+    const centerTileX = this.lonToTileX(lon, zoom);
+    const centerTileY = this.latToTileY(lat, zoom);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+
+    const tilesNeeded = [];
+    // Create 2x2 grid centered on location
+    for (let x = 0; x < 2; x++) {
+      for (let y = 0; y < 2; y++) {
+        tilesNeeded.push({
+          x: centerTileX + x - 1,
+          y: centerTileY + y - 1,
+          canvasX: x * 256,
+          canvasY: y * 256,
+        });
+      }
+    }
+
+    let tilesLoaded = 0;
+    const totalTiles = tilesNeeded.length;
+
+    tilesNeeded.forEach((tile) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        ctx.drawImage(img, tile.canvasX, tile.canvasY, 256, 256);
+        tilesLoaded++;
+
+        if (tilesLoaded === totalTiles) {
+          // All tiles loaded, apply dark green theme filter
+          this.applyDarkGreenTheme(ctx, canvas.width, canvas.height);
+          
+          // Convert to data URL and cache it
+          const compositeUrl = canvas.toDataURL("image/png");
+          this._mapCache[cacheKey] = compositeUrl;
+          
+          if (this.state.mapUrl !== compositeUrl) {
+            this.setState({ mapUrl: compositeUrl });
+          }
+        }
+      };
+      img.onerror = () => {
+        // If a tile fails to load, still count it to prevent hanging
+        tilesLoaded++;
+        if (tilesLoaded === totalTiles) {
+          this.applyDarkGreenTheme(ctx, canvas.width, canvas.height);
+          const compositeUrl = canvas.toDataURL("image/png");
+          this._mapCache[cacheKey] = compositeUrl;
+          
+          if (this.state.mapUrl !== compositeUrl) {
+            this.setState({ mapUrl: compositeUrl });
+          }
+        }
+      };
+      img.src = `https://tile.openstreetmap.org/${zoom}/${tile.x}/${tile.y}.png`;
+      // img.src = `https://tiles.stadiamaps.com/tiles/stamen_toner/${zoom}/${tile.x}/${tile.y}.png`;
+    });
+  }
+
+  applyDarkGreenTheme(ctx, width, height) {
+    // Get the image data to manipulate pixels
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    // Convert to dark green theme with better readability
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Calculate grayscale value for intensity mapping
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      const intensity = gray / 255;
+      
+      if (intensity < 0.15) {
+        // Very dark areas -> almost black with minimal green tint
+        data[i] = Math.floor(intensity * 15);     // R: 0-2
+        data[i + 1] = Math.floor(intensity * 25); // G: 0-4
+        data[i + 2] = Math.floor(intensity * 15); // B: 0-2
+      } else if (intensity < 0.35) {
+        // Medium dark areas -> darker green but more visible
+        const greenIntensity = (intensity - 0.15) / 0.2;
+        data[i] = Math.floor(8 + greenIntensity * 22);     // R: 8-30
+        data[i + 1] = Math.floor(15 + greenIntensity * 45); // G: 15-60
+        data[i + 2] = Math.floor(8 + greenIntensity * 22);  // B: 8-30
+      } else if (intensity < 0.65) {
+        // Medium areas -> readable pip-boy green
+        const greenIntensity = (intensity - 0.35) / 0.3;
+        data[i] = Math.floor(20 + greenIntensity * 60);     // R: 20-80
+        data[i + 1] = Math.floor(40 + greenIntensity * 90);  // G: 40-130
+        data[i + 2] = Math.floor(15 + greenIntensity * 45);  // B: 15-60
+      } else {
+        // Light areas -> brighter pip-boy green for good readability
+        const greenIntensity = (intensity - 0.65) / 0.35;
+        data[i] = Math.floor(50 + greenIntensity * 105);    // R: 50-155
+        data[i + 1] = Math.floor(80 + greenIntensity * 115); // G: 80-195
+        data[i + 2] = Math.floor(25 + greenIntensity * 85);  // B: 25-110
+      }
+    }
+
+    // Put the modified image data back to canvas
+    ctx.putImageData(imageData, 0, 0);
   }
   parseScheduleSections(text) {
     const lines = String(text || "").split("\n");

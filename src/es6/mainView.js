@@ -15,6 +15,7 @@ class MainView extends React.Component {
       radioIsLoading: false,
       radioVolume: 0.8,
       mapUrl: null,
+      mapZoom: 1,
     };
     this._radioStations = [
       {
@@ -408,6 +409,15 @@ class MainView extends React.Component {
       if (this.state.radioVolume !== vol) this.setState({ radioVolume: vol });
     }
   }
+  zoomMapIn() {
+    this.setState({ mapZoom: Math.min(this.state.mapZoom * 1.25, 3) });
+  }
+  zoomMapOut() {
+    this.setState({ mapZoom: Math.max(this.state.mapZoom / 1.25, 0.5) });
+  }
+  resetMapZoom() {
+    this.setState({ mapZoom: 1 });
+  }
   getMapZoom() {
     const item = this.getActiveItem(this.props.activeCategory);
     if (!item) return 14;
@@ -759,8 +769,18 @@ class MainView extends React.Component {
             <div className="value-line">{`Fetching ${title.toLowerCase()}...`}</div>
           )}
           {this.state.mapUrl && (
-            <div style={{ overflow: "auto", maxHeight: "70vh", border: "1px solid #19FF81" }}>
-              <img src={this.state.mapUrl} alt={title} style={{ width: "100%", height: "auto", touchAction: "pinch-zoom" }} />
+            <div>
+              <div className="value-line" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Zoom: {Math.round(this.state.mapZoom * 100)}%</span>
+                <div>
+                  <button onClick={() => this.zoomMapOut()} style={{ marginRight: "5px", background: "transparent", border: "1px solid #19FF81", color: "#19FF81", padding: "2px 8px", cursor: "pointer" }}>-</button>
+                  <button onClick={() => this.resetMapZoom()} style={{ marginRight: "5px", background: "transparent", border: "1px solid #19FF81", color: "#19FF81", padding: "2px 6px", cursor: "pointer" }}>Reset</button>
+                  <button onClick={() => this.zoomMapIn()} style={{ background: "transparent", border: "1px solid #19FF81", color: "#19FF81", padding: "2px 8px", cursor: "pointer" }}>+</button>
+                </div>
+              </div>
+              <div style={{ overflow: "auto", maxHeight: "400px", border: "1px solid #19FF81" }}>
+                <img src={this.state.mapUrl} alt={title} style={{ width: `${this.state.mapZoom * 100}%`, height: "auto", display: "block" }} />
+              </div>
             </div>
           )}
         </div>

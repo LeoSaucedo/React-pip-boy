@@ -494,7 +494,7 @@ class MainView extends React.Component {
               step="0.01"
               value={this.state.radioVolume}
               onChange={(e) => this.setRadioVolume(e.target.value)}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             />
           </div>
           <div className="value-line">Stations:</div>

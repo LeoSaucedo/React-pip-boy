@@ -1,0 +1,6 @@
+<!-- This is a placeholder - replace with actual 192x192 PNG icon -->
+<svg width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#000"/>
+  <circle cx="96" cy="96" r="80" fill="none" stroke="#19FF81" stroke-width="4"/>
+  <text x="96" y="106" font-family="monospace" font-size="20" fill="#19FF81" text-anchor="middle">PIP-BOY</text>
+</svg>

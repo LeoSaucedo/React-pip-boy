@@ -6,40 +6,63 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#19FF81" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#000000"
+    />
     <meta name="background-color" content="#000000" />
-    
+
     <!-- Android Chrome -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="Pip-Boy" />
-    
+
     <!-- iOS Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="Pip-Boy" />
-    
+
     <!-- Windows -->
     <meta name="msapplication-TileColor" content="#19FF81" />
     <meta name="msapplication-config" content="none" />
-    
+
     <!-- SEO and App Store -->
-    <meta name="description" content="Fallout-themed Pip-Boy interface with real device data - Battery, Weather, Maps, Radio" />
-    <meta name="keywords" content="fallout, pipboy, pip-boy, game, interface, retro, terminal" />
+    <meta
+      name="description"
+      content="Fallout-themed Pip-Boy interface with real device data - Battery, Weather, Maps, Radio"
+    />
+    <meta
+      name="keywords"
+      content="fallout, pipboy, pip-boy, game, interface, retro, terminal"
+    />
     <meta name="author" content="Pip-Boy App" />
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="Pip-Boy 3000" />
-    <meta property="og:description" content="Experience the iconic Fallout Pip-Boy interface" />
+    <meta
+      property="og:description"
+      content="Experience the iconic Fallout Pip-Boy interface"
+    />
     <meta property="og:type" content="website" />
-    
+
     <!-- Manifest and Icons -->
     <link rel="manifest" href="./manifest.json" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTlGRjgxIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCB4PSIxNiIgeT0iMTgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iIzE5RkY4MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UDwvdGV4dD4KPC9zdmc+" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwMCIvPgogIDxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9IjgwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxOUZGODEiIHN0cm9rZS13aWR0aD0iNCIvPgogIDx0ZXh0IHg9Ijk2IiB5PSIxMDYiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJUC1CT1k8L3RleHQ+Cjwvc3ZnPg==" />
-    
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTlGRjgxIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCB4PSIxNiIgeT0iMTgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iIzE5RkY4MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UDwvdGV4dD4KPC9zdmc+"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwMCIvPgogIDxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9IjgwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxOUZGODEiIHN0cm9rZS13aWR0aD0iNCIvPgogIDx0ZXh0IHg9Ijk2IiB5PSIxMDYiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMxOUZGODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJUC1CT1k8L3RleHQ+Cjwvc3ZnPg=="
+    />
+
     <title>Pip-Boy 3000</title>
     <link
       href="https://fonts.googleapis.com/css?family=Inconsolata:400,700"
@@ -53,73 +76,83 @@
     <script src="bundle.js"></script>
     <script>
       // Enhanced PWA functionality for Android
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('./sw.js')
-            .then(function(registration) {
-              console.log('SW registered: ', registration);
-              
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then(function (registration) {
+              console.log("SW registered: ", registration);
+
               // Update available
-              registration.addEventListener('updatefound', () => {
+              registration.addEventListener("updatefound", () => {
                 const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.addEventListener("statechange", () => {
+                  if (
+                    newWorker.state === "installed" &&
+                    navigator.serviceWorker.controller
+                  ) {
                     // New update available
-                    if (confirm('New version available! Reload to update?')) {
+                    if (confirm("New version available! Reload to update?")) {
                       window.location.reload();
                     }
                   }
                 });
               });
             })
-            .catch(function(registrationError) {
-              console.log('SW registration failed: ', registrationError);
+            .catch(function (registrationError) {
+              console.log("SW registration failed: ", registrationError);
             });
         });
       }
 
       // Android PWA install prompt
       let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('PWA install prompt available');
+      window.addEventListener("beforeinstallprompt", (e) => {
+        console.log("PWA install prompt available");
         e.preventDefault();
         deferredPrompt = e;
-        
+
         // Show custom install button (optional)
         // You could add a custom "Install App" button here
       });
 
       // Handle app installation
-      window.addEventListener('appinstalled', (evt) => {
-        console.log('PWA was installed');
+      window.addEventListener("appinstalled", (evt) => {
+        console.log("PWA was installed");
         deferredPrompt = null;
       });
 
       // Android fullscreen on launch
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        console.log('Running as PWA');
+      if (window.matchMedia("(display-mode: standalone)").matches) {
+        console.log("Running as PWA");
         // Hide any web-specific UI elements
-        document.body.classList.add('pwa-mode');
+        document.body.classList.add("pwa-mode");
       }
 
       // Screen orientation handling for Android
-      if ('screen' in window && 'orientation' in window.screen) {
+      if ("screen" in window && "orientation" in window.screen) {
         const handleOrientationChange = () => {
           // Force landscape for better Pip-Boy experience
-          if (window.screen.orientation.angle !== 90 && window.screen.orientation.angle !== 270) {
+          if (
+            window.screen.orientation.angle !== 90 &&
+            window.screen.orientation.angle !== 270
+          ) {
             // Suggest landscape mode
-            console.log('Landscape mode recommended for best experience');
+            console.log("Landscape mode recommended for best experience");
           }
         };
-        
-        window.screen.orientation.addEventListener('change', handleOrientationChange);
+
+        window.screen.orientation.addEventListener(
+          "change",
+          handleOrientationChange
+        );
         handleOrientationChange(); // Check initial orientation
       }
 
       // Android back button handling
-      if ('navigation' in window && 'NavigationDestination' in window) {
+      if ("navigation" in window && "NavigationDestination" in window) {
         // Handle Android back button in PWA
-        window.addEventListener('popstate', (event) => {
+        window.addEventListener("popstate", (event) => {
           // Custom back button handling if needed
         });
       }
@@ -127,19 +160,19 @@
       // Wake lock for Android (keep screen on during use)
       let wakeLock = null;
       const requestWakeLock = async () => {
-        if ('wakeLock' in navigator) {
+        if ("wakeLock" in navigator) {
           try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            console.log('Screen wake lock acquired');
+            wakeLock = await navigator.wakeLock.request("screen");
+            console.log("Screen wake lock acquired");
           } catch (err) {
-            console.log('Wake lock failed:', err);
+            console.log("Wake lock failed:", err);
           }
         }
       };
 
       // Request wake lock when app becomes visible
-      document.addEventListener('visibilitychange', async () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
+      document.addEventListener("visibilitychange", async () => {
+        if (wakeLock !== null && document.visibilityState === "visible") {
           await requestWakeLock();
         }
       });
